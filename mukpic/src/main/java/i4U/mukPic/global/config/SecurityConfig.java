@@ -6,7 +6,12 @@ import i4U.mukPic.global.auth.handler.OAuth2SuccessHandler;
 import i4U.mukPic.global.auth.service.CustomOAuth2UserService;
 import i4U.mukPic.global.jwt.filter.TokenAuthenticationFilter;
 import i4U.mukPic.global.jwt.filter.TokenExceptionFilter;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -20,7 +25,9 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.filter.OncePerRequestFilter;
 
+import java.io.IOException;
 import java.util.Arrays;
 
 @RequiredArgsConstructor
@@ -95,9 +102,27 @@ public class SecurityConfig {
         configuration.setAllowCredentials(true); // 인증 정보 허용
         configuration.setMaxAge(3600L);
         configuration.setExposedHeaders(Arrays.asList("Authorization", "Authorization-refresh", "X-Access-Token", "X-Refresh-Token"));
+        configuration.addExposedHeader("Set-Cookie");
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
+    }
+
+    @Bean
+    public FilterRegistrationBean<OncePerRequestFilter> sameSiteCookieFilter() {
+        FilterRegistrationBean<OncePerRequestFilter> registrationBean = new FilterRegistrationBean<>();
+        registrationBean.setFilter(new OncePerRequestFilter() {
+            @Override
+            protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+                    throws ServletException, IOException {
+                filterChain.doFilter(request, response);
+                if (response.getHeader("Set-Cookie") != null) {
+                    response.setHeader("Set-Cookie", response.getHeader("Set-Cookie") + "; SameSite=None; Secure");
+                }
+            }
+        });
+        registrationBean.setOrder(FilterRegistrationBean.LOWEST_PRECEDENCE);
+        return registrationBean;
     }
 }
