@@ -60,6 +60,11 @@ public class SecurityConfig {
                 .httpBasic(httpBasic -> httpBasic.disable()) // HTTP Basic 인증 비활성화
                 .headers(headers -> headers
                         .frameOptions(frameOptionsConfig -> frameOptionsConfig.disable()) // H2 콘솔 접근 허용
+                        .addHeaderWriter((request, response) -> {
+                            if (response.getHeader("Set-Cookie") != null) {
+                                response.setHeader("Set-Cookie", response.getHeader("Set-Cookie") + "; SameSite=None; Secure");
+                            }
+                        })
                 )
                 .sessionManagement(c ->
                         c.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // 세션 사용하지 않음
@@ -107,22 +112,5 @@ public class SecurityConfig {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
-    }
-
-    @Bean
-    public FilterRegistrationBean<OncePerRequestFilter> sameSiteCookieFilter() {
-        FilterRegistrationBean<OncePerRequestFilter> registrationBean = new FilterRegistrationBean<>();
-        registrationBean.setFilter(new OncePerRequestFilter() {
-            @Override
-            protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
-                    throws ServletException, IOException {
-                filterChain.doFilter(request, response);
-                if (response.getHeader("Set-Cookie") != null) {
-                    response.setHeader("Set-Cookie", response.getHeader("Set-Cookie") + "; SameSite=None; Secure");
-                }
-            }
-        });
-        registrationBean.setOrder(FilterRegistrationBean.LOWEST_PRECEDENCE);
-        return registrationBean;
     }
 }
