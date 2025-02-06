@@ -45,6 +45,11 @@ spring:
             scope: profile, email
 
 server:
+  servlet:
+    session:
+      cookie:
+        same-site: None
+        secure: true
   port: 8080
 
 logging:

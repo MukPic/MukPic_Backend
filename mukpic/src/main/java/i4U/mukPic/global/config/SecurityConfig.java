@@ -89,7 +89,7 @@ public class SecurityConfig {
     @Bean
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000","https://www.mukpic.site", "https://mukpic.site","https://api.mukpic.site")); // 허용할 도메인
+        configuration.setAllowedOriginPatterns(Arrays.asList("http://localhost:3000","https://*.mukpic.site")); // 허용할 도메인
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Access-Token", "X-Refresh-Token"));
         configuration.setAllowCredentials(true); // 인증 정보 허용
