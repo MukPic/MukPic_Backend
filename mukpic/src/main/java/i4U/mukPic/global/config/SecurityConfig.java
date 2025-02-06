@@ -6,12 +6,7 @@ import i4U.mukPic.global.auth.handler.OAuth2SuccessHandler;
 import i4U.mukPic.global.auth.service.CustomOAuth2UserService;
 import i4U.mukPic.global.jwt.filter.TokenAuthenticationFilter;
 import i4U.mukPic.global.jwt.filter.TokenExceptionFilter;
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -25,9 +20,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import org.springframework.web.filter.OncePerRequestFilter;
 
-import java.io.IOException;
 import java.util.Arrays;
 
 @RequiredArgsConstructor
@@ -60,11 +53,6 @@ public class SecurityConfig {
                 .httpBasic(httpBasic -> httpBasic.disable()) // HTTP Basic 인증 비활성화
                 .headers(headers -> headers
                         .frameOptions(frameOptionsConfig -> frameOptionsConfig.disable()) // H2 콘솔 접근 허용
-                        .addHeaderWriter((request, response) -> {
-                            if (response.getHeader("Set-Cookie") != null) {
-                                response.setHeader("Set-Cookie", response.getHeader("Set-Cookie") + "; SameSite=None; Secure");
-                            }
-                        })
                 )
                 .sessionManagement(c ->
                         c.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // 세션 사용하지 않음
@@ -72,7 +60,7 @@ public class SecurityConfig {
                         // 회원가입, 로그인 API는 인증 없이 접근 가능
                         .requestMatchers(HttpMethod.OPTIONS, "/**" ).permitAll()
                         .requestMatchers("/auth/email-login", "/", "/index.html","/images/upload", "notice/test", "/h2-console/**", "/register/email", "/register/emailAuth", "/auth/login","/users/register"
-                                            , "users/checkUserId", "users/checkEmail", "users/checkUserName").permitAll()
+                                , "users/checkUserId", "users/checkEmail", "users/checkUserName").permitAll()
                         // 그 외의 요청은 인증 필요
                         .anyRequest().authenticated()
                 )
@@ -107,7 +95,6 @@ public class SecurityConfig {
         configuration.setAllowCredentials(true); // 인증 정보 허용
         configuration.setMaxAge(3600L);
         configuration.setExposedHeaders(Arrays.asList("Authorization", "Authorization-refresh", "X-Access-Token", "X-Refresh-Token"));
-        configuration.addExposedHeader("Set-Cookie");
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
